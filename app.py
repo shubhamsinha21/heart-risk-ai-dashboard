@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
+from datetime import datetime
+from io import BytesIO
+from reportlab.pdfgen import canvas
 
 # -----------------------------
 # Page Config
@@ -55,6 +58,27 @@ with col2:
         ["upsloping", "flat", "downsloping"])
 
 st.divider()
+
+# -----------------------------
+# PDF FUNCTION (NEW)
+# -----------------------------
+def generate_pdf(data_dict):
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer)
+
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(50, 800, "Heart Disease Risk Report")
+
+    p.setFont("Helvetica", 11)
+
+    y = 760
+    for key, value in data_dict.items():
+        p.drawString(50, y, f"{key}: {value}")
+        y -= 20
+
+    p.save()
+    buffer.seek(0)
+    return buffer
 
 # -----------------------------
 # PREDICTION
@@ -111,7 +135,7 @@ if st.button("🔍 Predict Risk", use_container_width=True):
     st.divider()
 
     # -----------------------------
-    # CHART 1 - RISK CHART
+    # CHART 1
     # -----------------------------
     st.subheader("📈 Risk Probability Chart")
 
@@ -125,9 +149,9 @@ if st.button("🔍 Predict Risk", use_container_width=True):
     st.divider()
 
     # -----------------------------
-    # CHART 2 - FEATURE IMPORTANCE VISUAL STYLE
+    # CHART 2
     # -----------------------------
-    st.subheader("🧠 Key Health Indicators (Model Insight)")
+    st.subheader("🧠 Key Health Indicators")
 
     if hasattr(model, "coef_"):
         importance = np.abs(model.coef_[0])
@@ -146,11 +170,37 @@ if st.button("🔍 Predict Risk", use_container_width=True):
     # -----------------------------
     # FINAL SUMMARY
     # -----------------------------
-    st.success(
-        "Prediction completed using ML model + probability scoring + explainable indicators."
+    st.success("Prediction completed using ML + probability + explainability")
+
+    # -----------------------------
+    # NEW: PDF DOWNLOAD SECTION
+    # -----------------------------
+    st.subheader("📄 Download Report")
+
+    report_data = {
+        "Age": age,
+        "Gender": gender,
+        "Chest Pain": chest_pain,
+        "Resting BP": resting_bp,
+        "Cholesterol": cholesterol,
+        "Max Heart Rate": max_hr,
+        "Oldpeak": oldpeak,
+        "Prediction": "High Risk" if pred == 1 else "Low Risk",
+        "High Risk %": f"{high:.2f}",
+        "Low Risk %": f"{low:.2f}",
+        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    pdf_file = generate_pdf(report_data)
+
+    st.download_button(
+        label="📥 Download Medical Report (PDF)",
+        data=pdf_file,
+        file_name="heart_risk_report.pdf",
+        mime="application/pdf"
     )
 
 # -----------------------------
 # FOOTER
 # -----------------------------
-st.caption("Made with ❤️ by Shubham Sinha")
+st.caption("Made with ❤️ by Shubham Sinha | AI Engineer")
