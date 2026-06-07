@@ -8,8 +8,8 @@ scaler = joblib.load("scaler.pkl")
 columns = joblib.load("columns.pkl")
 
 # Creating the UI
-st.title("Hear Stroke Prediction by shubham😍")
-st.markdown("Provide the following details")
+st.title("Heart Disease Risk Prediction")
+st.markdown("Enter patient information below")
 
 age = st.slider("Age", 18, 100, 40) # min, max, range
 Gender = st.selectbox("Gender", ['male', 'female'])
